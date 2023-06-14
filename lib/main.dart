@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }
@@ -28,22 +28,30 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  double percentage = 0.0;
-  Timer? timer;
-  bool isRunning = false;
+  double percentage1 = 0.0;
+  double percentage2 = 0.0;
+  Timer? timer1;
+  Timer? timer2;
+  bool isRunning1 = false;
+  bool isRunning2 = false;
   int coins = 0;
+  bool isButton1Disabled = false;
+  bool isButton2Disabled = false;
+  bool isAutoCollectEnabled = true;
 
   @override
   void dispose() {
-    timer?.cancel();
+    timer1?.cancel();
+    timer2?.cancel();
     super.dispose();
   }
 
-  void startProgress(int time) {
-    if (!isRunning) {
+  void startProgress1(int time, int coinsEarn) {
+    if (!isRunning1) {
       setState(() {
-        percentage = 0.0;
-        isRunning = true;
+        percentage1 = 0.0;
+        isRunning1 = true;
+        isButton1Disabled = true; // Disable button1
       });
 
       final duration = Duration(seconds: time);
@@ -53,83 +61,165 @@ class _HomePageState extends State<HomePage> {
 
       int currentStep = 0;
 
-      timer = Timer.periodic(stepDuration, (timer) {
+      timer1 = Timer.periodic(stepDuration, (timer) {
         setState(() {
-          percentage = (currentStep + 1) * stepPercentage;
+          percentage1 = (currentStep + 1) * stepPercentage;
           currentStep++;
 
           if (currentStep >= totalSteps) {
             timer.cancel();
-            Future.delayed(const Duration(milliseconds: 100), () {
-              setState(() {
-                percentage = 0.0;
-                isRunning = false;
-                coins++;
-              });
+            setState(() {
+              percentage1 = 0.0;
+              isRunning1 = false;
+              coins += coinsEarn;
+              isButton1Disabled = false; // Enable button1 after progress is over
             });
           }
         });
       });
 
       Timer(duration, () {
-        timer?.cancel();
-        if (isRunning) {
+        timer1?.cancel();
+        if (isRunning1) {
           setState(() {
-            isRunning = false;
-            coins++;
+            isRunning1 = false;
+            coins += coinsEarn;
+            isButton1Disabled = false; // Enable button1 after progress is over
           });
         }
       });
     }
   }
 
-  void autoCollect() {
-    if (coins >= 10) {
+  void startProgress2(int time, int coinsEarn) {
+    if (!isRunning2) {
       setState(() {
-        coins -= 10;
-        collectCoinsAutomatically();
+        percentage2 = 0.0;
+        isRunning2 = true;
+        isButton2Disabled = true; // Disable button2
+      });
+
+      final duration = Duration(seconds: time);
+      const totalSteps = 100;
+      final stepDuration = duration ~/ totalSteps;
+      const stepPercentage = 100 / totalSteps;
+
+      int currentStep = 0;
+
+      timer2 = Timer.periodic(stepDuration, (timer) {
+        setState(() {
+          percentage2 = (currentStep + 1) * stepPercentage;
+          currentStep++;
+
+          if (currentStep >= totalSteps) {
+            timer.cancel();
+            setState(() {
+              percentage2 = 0.0;
+              isRunning2 = false;
+              coins += coinsEarn;
+              isButton2Disabled = false; // Enable button2 after progress is over
+            });
+          }
+        });
+      });
+
+      Timer(duration, () {
+        timer2?.cancel();
+        if (isRunning2) {
+          setState(() {
+            isRunning2 = false;
+            coins += coinsEarn;
+            isButton2Disabled = false; // Enable button2 after progress is over
+          });
+        }
       });
     }
   }
 
-  void collectCoinsAutomatically() {
-    const int progressDuration = 3; // Duration of each progress in seconds
-    const int delayDuration = 1; // Delay between each progress in seconds
+  void autoCollect(int time) {
+    if (coins >= 10 && isAutoCollectEnabled) {
+      setState(() {
+        coins -= 10;
+        collectCoinsAutomatically(time);
+        isAutoCollectEnabled = false; // Disable auto-collect after it has been used once
+      });
+    }
+  }
 
-    Timer(const Duration(seconds: delayDuration), () {
-      startProgress(progressDuration);
+  void collectCoinsAutomatically(int time) {
+    const int progressDuration = 1; // Duration of each progress in seconds
+
+    Timer.run(() {
+      startProgress1(progressDuration, 1);
       Timer(const Duration(seconds: progressDuration), () {
-        collectCoinsAutomatically(); // Restart the progress
+        collectCoinsAutomatically(time); // Restart the progress
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Percentage Meter Demo'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return SafeArea(
+      child: Scaffold(
+        body: Column(
           children: [
-            PercentageMeter(percentage: percentage, screenWidth: MediaQuery.of(context).size.width),
-            ElevatedButton(
-              onPressed: () {
-                startProgress(2);
-              },
-              child: const Text('Start'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                autoCollect();
-              },
-              child: const Text('AUTO-COLLECT (10 coins)'),
-            ),
-            const SizedBox(height: 20),
             Text('Coins: $coins'),
+            Column(
+              children: [
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: isButton1Disabled
+                          ? null // Disable button1 if isButton1Disabled is true
+                          : () {
+                              startProgress1(1, 1); // Pass the time duration (5 seconds) to startProgress1
+                            },
+                      child: const Text('Wheat Fields'),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    PercentageMeter(
+                      percentage: percentage1,
+                      screenWidth: MediaQuery.of(context).size.width,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: isButton2Disabled
+                          ? null // Disable button2 if isButton2Disabled is true
+                          : () {
+                              startProgress2(2, 2);
+                            },
+                      child: const Text('Vineyard Estate'),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    PercentageMeter(
+                      percentage: percentage2,
+                      screenWidth: MediaQuery.of(context).size.width,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                autoCollect(5); // Pass the time duration (5 seconds) from the "Wheat Fields" button
+              },
+              child: Text(isAutoCollectEnabled ? 'AUTO-COLLECT (10 coins)' : 'Wheat Fields Auto-Collect: Used'),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
