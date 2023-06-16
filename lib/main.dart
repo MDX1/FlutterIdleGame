@@ -30,28 +30,54 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   double percentage1 = 0.0;
   double percentage2 = 0.0;
+  double percentage3 = 0.0;
+  double percentage4 = 0.0;
   Timer? timer1;
   Timer? timer2;
+  Timer? timer3;
+  Timer? timer4;
   bool isRunning1 = false;
   bool isRunning2 = false;
+  bool isRunning3 = false;
+  bool isRunning4 = false;
   int coins = 0;
   bool isButton1Disabled = false;
   bool isButton2Disabled = false;
-  bool isAutoCollectEnabled = true;
+  bool isButton3Disabled = false;
+  bool isButton4Disabled = false;
 
   @override
   void dispose() {
     timer1?.cancel();
     timer2?.cancel();
+    timer3?.cancel();
+    timer4?.cancel();
     super.dispose();
   }
 
-  void startProgress1(int time, int coinsEarn) {
-    if (!isRunning1) {
+  void startProgress(int time, int coinsEarn, int buttonIndex) {
+    if ((buttonIndex == 1 && !isRunning1) ||
+        (buttonIndex == 2 && !isRunning2) ||
+        (buttonIndex == 3 && !isRunning3) ||
+        (buttonIndex == 4 && !isRunning4)) {
       setState(() {
-        percentage1 = 0.0;
-        isRunning1 = true;
-        isButton1Disabled = true; // Disable button1
+        if (buttonIndex == 1) {
+          percentage1 = 0.0;
+          isRunning1 = true;
+          isButton1Disabled = true; // Disable button1
+        } else if (buttonIndex == 2) {
+          percentage2 = 0.0;
+          isRunning2 = true;
+          isButton2Disabled = true; // Disable button2
+        } else if (buttonIndex == 3) {
+          percentage3 = 0.0;
+          isRunning3 = true;
+          isButton3Disabled = true; // Disable button3
+        } else if (buttonIndex == 4) {
+          percentage4 = 0.0;
+          isRunning4 = true;
+          isButton4Disabled = true; // Disable button4
+        }
       });
 
       final duration = Duration(seconds: time);
@@ -60,76 +86,75 @@ class _HomePageState extends State<HomePage> {
       const stepPercentage = 100 / totalSteps;
 
       int currentStep = 0;
+      Timer? timer;
 
-      timer1 = Timer.periodic(stepDuration, (timer) {
+      timer = Timer.periodic(stepDuration, (timer) {
         setState(() {
-          percentage1 = (currentStep + 1) * stepPercentage;
+          if (buttonIndex == 1) {
+            percentage1 = (currentStep + 1) * stepPercentage;
+          } else if (buttonIndex == 2) {
+            percentage2 = (currentStep + 1) * stepPercentage;
+          } else if (buttonIndex == 3) {
+            percentage3 = (currentStep + 1) * stepPercentage;
+          } else if (buttonIndex == 4) {
+            percentage4 = (currentStep + 1) * stepPercentage;
+          }
           currentStep++;
 
           if (currentStep >= totalSteps) {
             timer.cancel();
             setState(() {
-              percentage1 = 0.0;
-              isRunning1 = false;
-              coins += coinsEarn;
-              isButton1Disabled = false; // Enable button1 after progress is over
+              if (buttonIndex == 1) {
+                percentage1 = 0.0;
+                isRunning1 = false;
+                coins += coinsEarn;
+                isButton1Disabled = false; // Enable button1 after progress is over
+              } else if (buttonIndex == 2) {
+                percentage2 = 0.0;
+                isRunning2 = false;
+                coins += coinsEarn;
+                isButton2Disabled = false; // Enable button2 after progress is over
+              } else if (buttonIndex == 3) {
+                percentage3 = 0.0;
+                isRunning3 = false;
+                coins += coinsEarn;
+                isButton3Disabled = false; // Enable button3 after progress is over
+              } else if (buttonIndex == 4) {
+                percentage4 = 0.0;
+                isRunning4 = false;
+                coins += coinsEarn;
+                isButton4Disabled = false; // Enable button4 after progress is over
+              }
             });
           }
         });
       });
 
       Timer(duration, () {
-        timer1?.cancel();
-        if (isRunning1) {
+        timer?.cancel();
+        if (buttonIndex == 1 && isRunning1) {
           setState(() {
             isRunning1 = false;
             coins += coinsEarn;
             isButton1Disabled = false; // Enable button1 after progress is over
           });
-        }
-      });
-    }
-  }
-
-  void startProgress2(int time, int coinsEarn) {
-    if (!isRunning2) {
-      setState(() {
-        percentage2 = 0.0;
-        isRunning2 = true;
-        isButton2Disabled = true; // Disable button2
-      });
-
-      final duration = Duration(seconds: time);
-      const totalSteps = 100;
-      final stepDuration = duration ~/ totalSteps;
-      const stepPercentage = 100 / totalSteps;
-
-      int currentStep = 0;
-
-      timer2 = Timer.periodic(stepDuration, (timer) {
-        setState(() {
-          percentage2 = (currentStep + 1) * stepPercentage;
-          currentStep++;
-
-          if (currentStep >= totalSteps) {
-            timer.cancel();
-            setState(() {
-              percentage2 = 0.0;
-              isRunning2 = false;
-              coins += coinsEarn;
-              isButton2Disabled = false; // Enable button2 after progress is over
-            });
-          }
-        });
-      });
-
-      Timer(duration, () {
-        timer2?.cancel();
-        if (isRunning2) {
+        } else if (buttonIndex == 2 && isRunning2) {
           setState(() {
             isRunning2 = false;
             coins += coinsEarn;
             isButton2Disabled = false; // Enable button2 after progress is over
+          });
+        } else if (buttonIndex == 3 && isRunning3) {
+          setState(() {
+            isRunning3 = false;
+            coins += coinsEarn;
+            isButton3Disabled = false; // Enable button3 after progress is over
+          });
+        } else if (buttonIndex == 4 && isRunning4) {
+          setState(() {
+            isRunning4 = false;
+            coins += coinsEarn;
+            isButton4Disabled = false; // Enable button4 after progress is over
           });
         }
       });
@@ -137,11 +162,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void autoCollect(int time) {
-    if (coins >= 10 && isAutoCollectEnabled) {
+    if (coins >= 10) {
       setState(() {
         coins -= 10;
         collectCoinsAutomatically(time);
-        isAutoCollectEnabled = false; // Disable auto-collect after it has been used once
       });
     }
   }
@@ -150,7 +174,7 @@ class _HomePageState extends State<HomePage> {
     const int progressDuration = 1; // Duration of each progress in seconds
 
     Timer.run(() {
-      startProgress1(progressDuration, 1);
+      startProgress(progressDuration, 1, 1);
       Timer(const Duration(seconds: progressDuration), () {
         collectCoinsAutomatically(time); // Restart the progress
       });
@@ -172,7 +196,7 @@ class _HomePageState extends State<HomePage> {
                       onPressed: isButton1Disabled
                           ? null // Disable button1 if isButton1Disabled is true
                           : () {
-                              startProgress1(1, 1); // Pass the time duration (5 seconds) to startProgress1
+                              startProgress(1, 1, 1); // Pass the time duration (1 second) to startProgress for button1
                             },
                       child: const Text('Wheat Fields'),
                     ),
@@ -196,7 +220,7 @@ class _HomePageState extends State<HomePage> {
                       onPressed: isButton2Disabled
                           ? null // Disable button2 if isButton2Disabled is true
                           : () {
-                              startProgress2(2, 2);
+                              startProgress(2, 2, 2); // Pass the time duration (2 seconds) to startProgress for button2
                             },
                       child: const Text('Vineyard Estate'),
                     ),
@@ -212,12 +236,60 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
+            Column(
+              children: [
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: isButton3Disabled
+                          ? null // Disable button3 if isButton3Disabled is true
+                          : () {
+                              startProgress(4, 6, 3); // Pass the time duration (4 seconds) to startProgress for button3
+                            },
+                      child: const Text('Sunflower Plantation'),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    PercentageMeter(
+                      percentage: percentage3,
+                      screenWidth: MediaQuery.of(context).size.width,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: isButton4Disabled
+                          ? null // Disable button4 if isButton4Disabled is true
+                          : () {
+                              startProgress(8, 15, 4); // Pass the time duration (8 seconds) to startProgress for button4
+                            },
+                      child: const Text('Apple Orchard Estate'),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    PercentageMeter(
+                      percentage: percentage4,
+                      screenWidth: MediaQuery.of(context).size.width,
+                    ),
+                  ],
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 autoCollect(5); // Pass the time duration (5 seconds) from the "Wheat Fields" button
               },
-              child: Text(isAutoCollectEnabled ? 'AUTO-COLLECT (10 coins)' : 'Wheat Fields Auto-Collect: Used'),
+              child: const Text('AUTO-COLLECT (10 coins)'),
             ),
             const SizedBox(height: 20),
           ],
